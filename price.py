@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys,os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 
 import jsm
 import MySQLdb
@@ -17,10 +19,11 @@ def main():
 
 	q = jsm.Quotes()
 
-	start_date = datetime.date(2014,10,1)
-	end_date   = datetime.date(2014,11,4)
+	dt = datetime.date
+	start_date = dt.today() - datetime.timedelta(days = 2)
+	end_date   = dt.today() - datetime.timedelta(days = 1)
 
-	cursor.execute("SELECT ccode FROM brands where ccode = 1821")
+	cursor.execute("SELECT ccode FROM brands")
 	res = cursor.fetchall()
 	for r in res:
 		try:
