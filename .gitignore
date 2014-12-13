@@ -2,4 +2,3 @@ Capfile
 config/
 config.py
 *.pyc
-visualize.py
