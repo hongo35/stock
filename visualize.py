@@ -5,6 +5,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 import MySQLdb
 import pandas as pd
 import matplotlib.pyplot as plt
+#from scipy import *
+#import numpy as np
+from statsmodels.tsa import arima_model
 import datetime
 import config
 
@@ -20,9 +23,9 @@ def main():
 
 	date = []
 	data = {
-		'open': [],
-		'high': [],
-		'low': [],
+		'open':  [],
+		'high':  [],
+		'low':   [],
 		'close': []
 	}
 	volume = []
@@ -58,12 +61,24 @@ def main():
 		except:
 			pass
 
+	# ARIMAモデルで時系列予測
+	results = arima_model.ARIMA(data['close'],order=[4,0,0]).fit()
+
+	plt.clf()
+	plt.plot(data['close'])
+	plt.plot(results.predict(start=0,end=(len(data['close']) + 5)))
+	plt.legend(['data', 'predicted'])
+
 	# 可視化
-	fig, axes = plt.subplots(2,1)
-	data_frame = pd.DataFrame(data, index=date)
-	data_frame.plot(ax=axes[0], title=(market + corp_name))
-	volume_series = pd.Series(volume, index=date)
-	volume_series.plot(kind='bar', ax=axes[1])
+	#fig, axes = plt.subplots(2,1)
+	#data_frame = pd.DataFrame(data, index=date)
+	series = pd.Series(data['close'], index=date)
+	#series.plot(title=(market + corp_name))
+	pd.rolling_mean(series, 4).plot(style='--', c='r')
+	plt.legend(['data', 'predicted(ARIMA)', 'moving average'])
+
+	#volume_series = pd.Series(volume, index=date)
+	#volume_series.plot(kind='bar', ax=axes[1])
 	plt.show()
 
 if __name__ == '__main__':
