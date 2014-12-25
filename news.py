@@ -13,7 +13,8 @@ def main():
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
-		passwd  = config.db['passwd']
+		passwd  = config.db['passwd'],
+		charset = "utf8"
 	)
 
 	cursor = con.cursor()
