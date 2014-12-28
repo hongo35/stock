@@ -8,14 +8,14 @@ import datetime
 import config
 
 def main():
-	connector = MySQLdb.connect(
+	con = MySQLdb.connect(
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
-		passwd  = config.db['passwd']
+		passwd  = config.db['passwd'],
+		charset = "utf8"
 	)
-
-	cursor = connector.cursor()
+	cursor = con.cursor()
 
 	q = jsm.Quotes()
 
@@ -30,11 +30,15 @@ def main():
 
 		for data in brand_data:
 			ts = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-			cursor.execute("INSERT INTO brands(ccode, industory_code, industory_name, market, name, info, created_at, updated_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)", (data.ccode, industory_code, industory_name, data.market, data.name, data.info, ts, ts))
-			connector.commit()
+			
+			try:
+				cursor.execute("INSERT INTO brands(ccode, industory_code, industory_name, market, name, info, created_at, updated_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE market = %s, updated_at = %s", (data.ccode, industory_code, industory_name, data.market, data.name, data.info, ts, ts, data.market, ts))
+				con.commit()
+			except:
+				pass
 
 	cursor.close()
-	connector.close()
+	con.close()
 
 if __name__ == '__main__':
 	main()
