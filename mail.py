@@ -20,7 +20,7 @@ def main():
 	)
 
 	mail_body = ""
-	cron_ts = (datetime.datetime.today() - datetime.timedelta(days = 1)).strftime("%Y-%m-%d 11:00:00")
+	cron_ts = (datetime.datetime.today() - datetime.timedelta(days = 1)).strftime("%Y-%m-%d 10:30:00")
 
 	cursor = con.cursor()
 	cursor.execute("SELECT * FROM articles WHERE created_at > %s ORDER BY created_at", [cron_ts])
