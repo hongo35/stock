@@ -21,7 +21,7 @@ class Stock:
 		self.cursor = self.con.cursor()
 
 	def wr(self, span):
-		self.cursor.execute("SELECT ccode,name FROM brands")
+		self.cursor.execute("SELECT brands.ccode,brands.name,finances.per,finances.pbr,finances.price_min FROM brands INNER JOIN finances ON brands.ccode = finances.ccode")
 		brands = self.cursor.fetchall()
 		for b in brands:
 			data = {
@@ -30,6 +30,7 @@ class Stock:
 				'low': [],
 				'close': []
 			}
+
 			self.cursor.execute("SELECT date,open,high,low,close,volume FROM prices WHERE ccode = %s ORDER BY date", [b[0]])
 			res = self.cursor.fetchall()
 			for r in res:
@@ -52,9 +53,14 @@ class Stock:
 				pass
 
 			if (highest - lowest) != 0:
-				wr = (highest - latest_close) * 100 / (highest - lowest)
-				if wr == 100:
-					print "%s : %s : %s" % (b[0], b[1], latest_close)
+				wr    = (highest - latest_close) * 100 / (highest - lowest)
+				per   = b[2]
+				pbr   = b[3]
+				price = b[4]
+				
+				# 条件
+				if wr == 100 and per < 20 and price < 100000:
+					print "%s,%s,%s,%s,%s,%s" % (b[0], b[1], per, pbr, price, latest_close)
 
 if __name__ == '__main__':
 	s = Stock()
