@@ -1,26 +1,24 @@
-# -*- coding: utf-8 -*-
 import sys,os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 
-import MySQLdb
+import mysql.connector
 import pandas as pd
 import matplotlib.pyplot as plt
-#from scipy import *
-#import numpy as np
-from statsmodels.tsa import arima_model
+# from statsmodels.tsa import arima_model
 import datetime
 import config
 
 def main():
-	connector = MySQLdb.connect(
+	con = mysql.connector.connect(
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
 		passwd  = config.db['passwd']
 	)
 
-	cursor = connector.cursor()
+	cur = con.cursor()
 
+	'''
 	date = []
 	data = {
 		'open':  [],
@@ -35,21 +33,21 @@ def main():
 
 	# 企業コード
 	ccode = "1301"
-	if argc != 0:
+	if argc != 1:
 		ccode = argvs[1]
 
 	# 企業名を取得
 	market = ""
 	corp_name = ""
-	cursor.execute("SELECT market,name FROM brands WHERE ccode = %s", [ccode])
-	res = cursor.fetchall()
+	cur.execute("SELECT market,name FROM brands WHERE ccode = %s", [ccode])
+	res = cur.fetchall()
 	for r in res:
-		market = u"【" + unicode(r[0], 'utf-8') + u"】"
-		corp_name = unicode(r[1], 'utf-8')
+		market    = "【" + r[0] + "】"
+		corp_name = r[1]
 
 	# 株価を取得
-	cursor.execute("SELECT date,open,high,low,close,volume FROM prices WHERE ccode = %s", [ccode])
-	res = cursor.fetchall()
+	cur.execute("SELECT date,open,high,low,close,volume FROM prices WHERE ccode = %s", [ccode])
+	res = cur.fetchall()
 	for r in res:
 		try:
 			date.append(r[0].strftime("%Y-%m-%d"))
@@ -61,6 +59,12 @@ def main():
 		except:
 			pass
 
+	series = pd.Series(data['close'], index=date)
+	series.plot(title=(market + corp_name))
+	plt.show()
+	'''
+
+	'''
 	# ARIMAモデルで時系列予測
 	results = arima_model.ARIMA(data['close'],order=[4,0,0]).fit()
 
@@ -80,6 +84,7 @@ def main():
 	#volume_series = pd.Series(volume, index=date)
 	#volume_series.plot(kind='bar', ax=axes[1])
 	plt.show()
+	'''
 
 if __name__ == '__main__':
 	main()

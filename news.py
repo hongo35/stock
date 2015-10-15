@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 import sys,os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 
 import config
-import MySQLdb
+import mysql.connector
 import datetime
 import requests
 from bs4 import BeautifulSoup
 
 def main():
-	con = MySQLdb.connect(
+	con = mysql.connector.connect(
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
@@ -17,7 +16,7 @@ def main():
 		charset = "utf8"
 	)
 
-	cursor = con.cursor()
+	cur = con.cursor()
 
 	res = requests.get("http://news.yahoo.co.jp/hl?c=biz")
 	soup = BeautifulSoup(res.text)
@@ -33,12 +32,12 @@ def main():
 		ts      = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
 		try:
-			cursor.execute("INSERT INTO articles(id,subject,url,source,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s)", [news_id,subject,url,source,ts,ts])
+			cur.execute("INSERT INTO articles(id,subject,url,source,created_at,updated_at) VALUES(%s,%s,%s,%s,%s,%s)", [news_id,subject,url,source,ts,ts])
 			con.commit()
 		except:
 			pass
 
-	cursor.close()
+	cur.close()
 	con.close()
 
 if __name__ == '__main__':
