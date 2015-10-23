@@ -1,90 +1,74 @@
 import sys,os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 
-import mysql.connector
+import mysql.connector as mysql
 import pandas as pd
 import matplotlib.pyplot as plt
-# from statsmodels.tsa import arima_model
-import datetime
+from datetime import datetime,timedelta
 import config
 
 def main():
-	con = mysql.connector.connect(
+	con = mysql.connect(
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
 		passwd  = config.db['passwd']
 	)
+	cur = con.cursor(dictionary=True)
 
-	cur = con.cursor()
+	start_date = datetime.strptime('2015-01-01', '%Y-%m-%d')
+	end_date   = datetime.strptime('2015-02-01', '%Y-%m-%d')
 
-	'''
-	date = []
-	data = {
-		'open':  [],
-		'high':  [],
-		'low':   [],
-		'close': []
-	}
-	volume = []
+	data = {}
+	for d in range((end_date - start_date).days):
+		date = (start_date + timedelta(d)).strftime('%Y-%m-%d')
 
-	argvs = sys.argv
-	argc = len(argvs)
+		data[date] = {
+			'open': 0,
+			'high': 0,
+			'low': 0,
+			'close': 0,
+			'volume': 0
+		}
 
 	# 企業コード
-	ccode = "1301"
-	if argc != 1:
-		ccode = argvs[1]
+	ccode = 1301
 
 	# 企業名を取得
-	market = ""
-	corp_name = ""
-	cur.execute("SELECT market,name FROM brands WHERE ccode = %s", [ccode])
-	res = cur.fetchall()
-	for r in res:
-		market    = "【" + r[0] + "】"
-		corp_name = r[1]
+	market = ''
+	corp_name = ''
+	cur.execute("SELECT market,name FROM brands WHERE ccode = %s" % (ccode))
+	for r in iter(cur):
+		market    = "【" + r['market'] + "】"
+		corp_name = r['name']
 
 	# 株価を取得
-	cur.execute("SELECT date,open,high,low,close,volume FROM prices WHERE ccode = %s", [ccode])
-	res = cur.fetchall()
-	for r in res:
+	cur.execute("SELECT date,open,high,low,close,volume FROM prices WHERE ccode = %s" % (ccode))
+	for r in iter(cur):
+		date = r['date'].strftime('%Y-%m-%d')
+
 		try:
-			date.append(r[0].strftime("%Y-%m-%d"))
-			data['open'].append(r[1])
-			data['high'].append(r[2])
-			data['low'].append(r[3])
-			data['close'].append(r[4])
-			volume.append(r[5])
+			data[date]['open'] = r['open']
+			data[date]['high'] = r['high']
+			data[date]['low'] = r['low']
+			data[date]['close'] = r['close']
+			data[date]['volume'] = r['volume']
 		except:
 			pass
 
-	series = pd.Series(data['close'], index=date)
+	dates = []
+	data_frame = {
+		'open': [],
+		'close': []
+	}
+	for r in sorted(data):
+		dates.append(r)
+		data_frame['open'].append(data[r]['open'])
+		data_frame['close'].append(data[r]['close'])
+
+	series = pd.DataFrame(data_frame, index=dates)
 	series.plot(title=(market + corp_name))
 	plt.show()
-	'''
-
-	'''
-	# ARIMAモデルで時系列予測
-	results = arima_model.ARIMA(data['close'],order=[4,0,0]).fit()
-
-	plt.clf()
-	plt.plot(data['close'])
-	plt.plot(results.predict(start=0,end=(len(data['close']) + 5)))
-	plt.legend(['data', 'predicted'])
-
-	# 可視化
-	#fig, axes = plt.subplots(2,1)
-	#data_frame = pd.DataFrame(data, index=date)
-	series = pd.Series(data['close'], index=date)
-	#series.plot(title=(market + corp_name))
-	pd.rolling_mean(series, 4).plot(style='--', c='r')
-	plt.legend(['data', 'predicted(ARIMA)', 'moving average'])
-
-	#volume_series = pd.Series(volume, index=date)
-	#volume_series.plot(kind='bar', ax=axes[1])
-	plt.show()
-	'''
 
 if __name__ == '__main__':
 	main()
