@@ -17,12 +17,12 @@ def main():
 		passwd  = config.db['passwd'],
 		charset = "utf8"
 	)
+	cur = con.cursor(dictionary=True)
 
 	mail_body = ""
 	cron_ts = (datetime.datetime.today() - datetime.timedelta(days = 1)).strftime("%Y-%m-%d 10:30:00")
 
-	cur = con.cursor()
-	cur.execute("SELECT * FROM articles WHERE created_at > %s ORDER BY created_at" % (cron_ts))
+	cur.execute("SELECT * FROM articles WHERE created_at > '%s' ORDER BY created_at" % (cron_ts))
 	for r in iter(cur):
 		mail_body += "<a href='%s'>%s</a>[%s]<br/>" % (r['url'], r['subject'], r['source'])
 
@@ -32,7 +32,7 @@ def main():
 	cset = 'utf-8'
 
 	message = MIMEText(mail_body, 'html', cset)
-	message['Subject'] = Header(u'[News][Stock]ヤフー株式ニュースまとめ', cset)
+	message['Subject'] = Header('[News][Stock]ヤフー株式ニュースまとめ', cset)
 	message['From']    = config.mail['from']
 	message['To']      = config.mail['to']
 
