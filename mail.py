@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 import sys,os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/config')
 
 import config
-import MySQLdb as mdb
+import mysql.connector as mysql
 import datetime
 import smtplib
 from email.mime.text import MIMEText
@@ -11,7 +10,7 @@ from email.header import Header
 from email import charset
 
 def main():
-	con = mdb.connect(
+	con = mysql.connect(
 		host    = config.db['host'],
 		db      = config.db['db'],
 		user    = config.db['user'],
@@ -22,16 +21,15 @@ def main():
 	mail_body = ""
 	cron_ts = (datetime.datetime.today() - datetime.timedelta(days = 1)).strftime("%Y-%m-%d 10:30:00")
 
-	cursor = con.cursor()
-	cursor.execute("SELECT * FROM articles WHERE created_at > %s ORDER BY created_at", [cron_ts])
-	res = cursor.fetchall()
-	for r in res:
-		mail_body += "<a href='%s'>%s</a>[%s]<br/>" % (r[2], r[1], r[3])
+	cur = con.cursor()
+	cur.execute("SELECT * FROM articles WHERE created_at > %s ORDER BY created_at" % (cron_ts))
+	for r in iter(cur):
+		mail_body += "<a href='%s'>%s</a>[%s]<br/>" % (r['url'], r['subject'], r['source'])
 
 	mcon = smtplib.SMTP('localhost')
 	mcon.set_debuglevel(True)
 
-	cset = 'utf-8'  # <---------------(文字セットの設定だよ)
+	cset = 'utf-8'
 
 	message = MIMEText(mail_body, 'html', cset)
 	message['Subject'] = Header(u'[News][Stock]ヤフー株式ニュースまとめ', cset)
@@ -41,7 +39,7 @@ def main():
 	mcon.sendmail(config.mail['from'], [config.mail['to']], message.as_string()) 
 	mcon.close()
 
-	cursor.close()
+	cur.close()
 	con.close()
 
 if __name__ == '__main__':
